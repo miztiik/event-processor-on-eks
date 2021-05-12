@@ -11,7 +11,8 @@ class GlobalArgs:
     OWNER = "Mystique"
     VERSION = "2021-05-11"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-    S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
+    # S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
+    S3_BKT_NAME = "sales-events-bkt-stack-databucketd8691f4e-di00ogv8w2uz"
     S3_PREFIX = "store_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
 
@@ -37,6 +38,7 @@ def _rand_coin_flip():
 def _gen_uuid():
     return str(uuid.uuid4())
 
+
 def put_object(_pre, data):
     try:
         _r = _s3.put_object(
@@ -53,6 +55,7 @@ def put_object(_pre, data):
 _s3 = boto3.client("s3")
 
 end_time = datetime.datetime.now() + datetime.timedelta(seconds=10)
+
 
 def lambda_handler(event, context):
     resp = {"status": False}
@@ -144,4 +147,4 @@ def lambda_handler(event, context):
     }
 
 
-lambda_handler({},{})
+lambda_handler({}, {})
