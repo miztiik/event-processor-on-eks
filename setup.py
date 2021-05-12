@@ -9,14 +9,14 @@ setuptools.setup(
     name="event_processor_on_eks",
     version="0.0.1",
 
-    description="An empty CDK Python app",
+    description="event-processor-on-eks",
     long_description=long_description,
     long_description_content_type="text/markdown",
 
     author="author",
 
-    package_dir={"": "event_processor_on_eks"},
-    packages=setuptools.find_packages(where="event_processor_on_eks"),
+    package_dir={"": "stacks"},
+    packages=setuptools.find_packages(where="stack"),
 
     install_requires=[
         "aws-cdk.core==1.103.0",

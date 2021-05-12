@@ -1,34 +1,59 @@
 #!/usr/bin/env python3
-import os
 
 from aws_cdk import core as cdk
 
-# For consistency with TypeScript code, `cdk` is the preferred import name for
-# the CDK's core module.  The following line also imports it as `core` for use
-# with examples from the CDK Developer's Guide, which are in the process of
-# being updated to use `cdk`.  You may delete this import if you don't need it.
-from aws_cdk import core
+from stacks.back_end.vpc_stack import VpcStack
+from stacks.back_end.s3_stack.s3_stack import S3Stack
+from stacks.back_end.eks_cluster_stack.eks_cluster_stack import EksClusterStack
+from stacks.back_end.eks_s3_producer_stack.eks_s3_producer_stack import EksS3ProducerStack
 
-from event_processor_on_eks.event_processor_on_eks_stack import EventProcessorOnEksStack
+app = cdk.App()
+
+# S3 Bucket to hold our sales events
+sales_events_bkt_stack = S3Stack(
+    app,
+    # f"{app.node.try_get_context('project')}-sales-events-bkt-stack",
+    f"sales-events-bkt-stack",
+    stack_log_level="INFO",
+    description="Miztiik Automation: S3 Bucket to hold our sales events"
+)
 
 
-app = core.App()
-EventProcessorOnEksStack(app, "EventProcessorOnEksStack",
-    # If you don't specify 'env', this stack will be environment-agnostic.
-    # Account/Region-dependent features and context lookups will not work,
-    # but a single synthesized template can be deployed anywhere.
+# VPC Stack for hosting Secure workloads & Other resources
+vpc_stack = VpcStack(
+    app,
+    # f"{app.node.try_get_context('project')}-vpc-stack",
+    "eks-cluster-vpc-stack",
+    stack_log_level="INFO",
+    description="Miztiik Automation: Custom Multi-AZ VPC"
+)
 
-    # Uncomment the next line to specialize this stack for the AWS Account
-    # and Region that are implied by the current CLI configuration.
+# EKS Cluster to process event processor
+eks_cluster_stack = EksClusterStack(
+    app,
+    f"eks-cluster-stack",
+    stack_log_level="INFO",
+    vpc=vpc_stack.vpc,
+    description="Miztiik Automation: EKS Cluster to process event processor"
+)
 
-    #env=core.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
 
-    # Uncomment the next line if you know exactly what Account and Region you
-    # want to deploy the stack to. */
+# S3 Sales Event Data Producer on EKS Pods
+sales_events_producer_stack = EksS3ProducerStack(
+    app,
+    f"sales-events-producer-stack",
+    stack_log_level="INFO",
+    eks_cluster=eks_cluster_stack.eks_cluster_1,
+    sales_event_bkt=sales_events_bkt_stack.data_bkt,
+    description="Miztiik Automation: S3 Sales Event Data Producer on EKS Pods")
 
-    #env=core.Environment(account='123456789012', region='us-east-1'),
+# Stack Level Tagging
+_tags_lst = app.node.try_get_context("tags")
 
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
+if _tags_lst:
+    for _t in _tags_lst:
+        for k, v in _t.items():
+            cdk.Tags.of(app).add(
+                k, v, apply_to_launched_instances=True, priority=300)
 
 app.synth()
