@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p2
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sales-event-producer-03
+  template:
+    metadata:
+      labels:
+        app: sales-event-producer-03
+    spec:
+      containers:
+        - name: p2
+          image: 'python:3.8.10-alpine'
+          command:
+            - sh
+            - '-c'
+          args:
+            - wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_s3_producer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;tail -f /dev/null;
+          env:
+            - name: S3_BKT_NAME
+              value: sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831
+            - name: S3_PREFIX
+              value: sales_events

@@ -54,6 +54,9 @@ class EksClusterStack(cdk.Stack):
                 ),
                 _iam.ManagedPolicy.from_aws_managed_policy_name(
                     "AmazonSSMManagedInstanceCore"
+                ),
+                _iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonS3FullAccess"
                 )
             ]
         )
@@ -94,18 +97,11 @@ class EksClusterStack(cdk.Stack):
             description="Allow incoming within SG"
         )
 
-        clust_name = "mizt_c_1"
-
-        eks_c_admin = _iam.Role(
-            self,
-            f"admin_{clust_name}",
-            assumed_by=_iam.AccountRootPrincipal(),
-            role_name="c_admin"
-        )
+        clust_name = "c_1_event_processor"
 
         self.eks_cluster_1 = _eks.Cluster(
             self,
-            f"c_{clust_name}",
+            f"{clust_name}",
             cluster_name=f"{clust_name}",
             version=_eks.KubernetesVersion.V1_18,
             vpc=vpc,
@@ -134,7 +130,10 @@ class EksClusterStack(cdk.Stack):
             min_size=1,
             max_size=6,
             desired_size=2,
-            labels={"app": "miztiik_ng", "lifecycle": "on_demand"},
+            labels={"app": "miztiik_ng",
+                    "lifecycle": "on_demand",
+                    "compute_provider": "ec2"
+                    },
             subnets=_ec2.SubnetSelection(
                 subnet_type=_ec2.SubnetType.PUBLIC),
             ami_type=_eks.NodegroupAmiType.AL2_X86_64,
@@ -144,47 +143,66 @@ class EksClusterStack(cdk.Stack):
             # bootstrap_options={"kubelet_extra_args": "--node-labels=node.kubernetes.io/lifecycle=spot,daemonset=active,app=general --eviction-hard imagefs.available<15% --feature-gates=CSINodeInfo=true,CSIDriverRegistry=true,CSIBlockVolume=true,ExpandCSIVolumes=true"}
         )
 
-        # This code block will provision worker nodes with launch configuration
-        """
+        # This code block will provision worker nodes with Fargate Profile configuration
         fargate_n_g_3 = self.eks_cluster_1.add_fargate_profile(
             "FargateEnabled",
             fargate_profile_name="miztiik_n_g_fargate",
             selectors=[
                 _eks.Selector(
-                    namespace="miztiik_ns",
+                    namespace="default",
                     labels={"fargate": "enabled"}
                 )
             ]
         )
-        """
 
-        """
-        # apply a kubernetes manifest to the cluster
-        self.eks_cluster_1.add_manifest(
-            "miztProducer",
-            {
-                "apiVersion": "v1",
-                "kind": "Pod",
-                "metadata": {
-                    "name": "sales-event-producer",
-                    "labels": {"name": "py-producer"}
-                },
-                "spec": {
-                    "containers": [
-                        {
-                            "name": "hello",
-                            "image": "paulbouwer/hello-kubernetes:1.5",
-                            "ports": [{"containerPort": 8080}]
-                        }
-
-                    ]
-                }
-            }
-        )
-        """
         self.add_cluster_admin()
         # We like to use the Kubernetes Dashboard
-        # self.enable_dashboard()
+        self.enable_dashboard()
+
+        ###########################################
+        ################# OUTPUTS #################
+        ###########################################
+        output_0 = cdk.CfnOutput(
+            self,
+            "AutomationFrom",
+            value=f"{GlobalArgs.SOURCE_INFO}",
+            description="To know more about this automation stack, check out our github page."
+        )
+
+        output_1 = cdk.CfnOutput(
+            self,
+            "eksClusterAdminRole",
+            value=f"{c_admin_role.role_name}",
+            description="EKS Cluster Admin Role"
+        )
+
+        output_2 = cdk.CfnOutput(
+            self,
+            "eksClusterSvcRole",
+            value=f"{self._eks_cluster_svc_role.role_name}",
+            description="EKS Cluster Service Role"
+        )
+    """
+    # https://github.com/adamjkeller/cdk-eks-demo/blob/f9181a1362af9a28854fd1631f965884a9b04577/eks_cluster/alb_ingress.py
+    # https://github.com/kloia/aws-cdk-samples/blob/69cb2bb45aab23e08d19d5ace24915893fe92360/python/eks-simple-fargate/eks_simple_fargate/alb_ingress.py
+    def add_alb_ingress_controller(self):
+        # Add ALB ingress controller to EKS
+        _alb_chart = eks_cluster.add_helm_chart(
+            "ALBChart",
+            chart="aws-load-balancer-controller",
+            repository="https://aws.github.io/eks-charts",
+            release="alb",
+            create_namespace=False,
+            namespace="kube-system",
+            values=loadYamlReplaceVarLocal("../app_resources/alb-values.yaml",
+                                           fields={
+                                               "{{region_name}}": region,
+                                               "{{cluster_name}}": eks_cluster.cluster_name,
+                                               "{{vpc_id}}": eks_cluster.vpc.vpc_id
+                                           }
+                                           )
+        )
+    """
 
     def add_cluster_admin(self, name="eks-admin"):
         # Add admin privileges so we can sign in to the dashboard as the service account
@@ -220,6 +238,12 @@ class EksClusterStack(cdk.Stack):
             },
         )
 
+    # https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html
+
+    # CleanUp from CLI
+    # kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended.yaml
+    # kubectl delete deployment kubernetes-dashboard --namespace=kube-system
+
     def enable_dashboard(self, namespace: str = "kubernetes-dashboard"):
         chart = self.eks_cluster_1.add_helm_chart(
             "kubernetes-dashboard",
@@ -231,21 +255,4 @@ class EksClusterStack(cdk.Stack):
                 "fullnameOverride": "kubernetes-dashboard",
                 "extraArgs": ["--token-ttl=0"],
             },
-        )
-
-        ###########################################
-        ################# OUTPUTS #################
-        ###########################################
-        output_0 = cdk.CfnOutput(
-            self,
-            "AutomationFrom",
-            value=f"{GlobalArgs.SOURCE_INFO}",
-            description="To know more about this automation stack, check out our github page."
-        )
-
-        output_1 = cdk.CfnOutput(
-            self,
-            "eksClusterRole",
-            value=f"{self._eks_cluster_svc_role.role_name}",
-            description="EKS Cluster Role"
         )

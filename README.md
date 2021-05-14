@@ -98,6 +98,13 @@ In this demo, let us launch a EKS[1] cluster in a custom VPC using AWS CDK. The 
           --name 1_cdk_c \
           --region us-east-1 \
           --role-arn arn:aws:iam::111122223333:role/eks-cluster-stack-cAdminRole655A13CE-XBF2V3PPV4FI
+        
+       # Get Contexts
+       kubectl config get-contexts
+
+       # Delete Contexts
+       kubectl config delete-context Cluster_Name_1
+
 
        # List nodes
        kubectl get no
@@ -177,6 +184,10 @@ Thank you for your interest in contributing to our project. Whether it is a bug 
 1. [AWS EKS Troubleshooting - EKS IAM][2]
 1. [AWS EKS Troubleshooting - Resolve user/role does not have access to objects][3]
 1. [AWS EKS Troubleshooting - Resolve an unauthorized server][4]
+1. [AWS EKS Docs - Managing users or IAM roles][5]
+1. [Rancher Docs - K8s Cheat Sheet - Managing cluster][6]
+1. [K8s Docs - Cluster Contexts][7]
+1. [AWS EKS Docs - Dashboard][8]
 
 ### 🏷️ Metadata
 
@@ -188,6 +199,10 @@ Thank you for your interest in contributing to our project. Whether it is a bug 
 [2]: https://docs.aws.amazon.com/eks/latest/userguide/troubleshooting_iam.html
 [3]: https://aws.amazon.com/premiumsupport/knowledge-center/eks-kubernetes-object-access-error/
 [4]: https://aws.amazon.com/premiumsupport/knowledge-center/eks-api-server-unauthorized-error/
+[5]: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html
+[6]: https://rancher.com/learning-paths/how-to-manage-kubernetes-with-kubectl/
+[7]: https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/
+[8]: https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html
 [100]: https://www.udemy.com/course/aws-cloud-security/?referralCode=B7F1B6C78B45ADAF77A9
 [101]: https://www.udemy.com/course/aws-cloud-security-proactive-way/?referralCode=71DC542AD4481309A441
 [102]: https://www.udemy.com/course/aws-cloud-development-kit-from-beginner-to-professional/?referralCode=E15D7FB64E417C547579

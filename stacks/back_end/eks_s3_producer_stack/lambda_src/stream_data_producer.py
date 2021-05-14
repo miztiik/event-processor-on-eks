@@ -47,8 +47,7 @@ def put_object(_pre, data):
         )
         logger.debug(f"resp: {json.dumps(_r)}")
     except Exception as e:
-        logger.info(f"ERROR: For PREFIX:{_pre}")
-        # logger.exception(f"ERROR:{str(e)}")
+        logger.exception(f"ERROR:{str(e)}")
 
 
 _s3 = boto3.client("s3")
