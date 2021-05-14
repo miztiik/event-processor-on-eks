@@ -1,12 +1,16 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: e1
+  generateName: sales-event-producer-
+  labels:
+    jobgroup: sales-event-producer-group
 spec:
+  parallelism: 2
+  backoffLimit: 2
   template:
     spec:
       containers:
-        - name: t5
+        - name: j1
           image: 'python:3.8.10-alpine'
           command:
             - sh
@@ -14,9 +18,9 @@ spec:
           args:
             - wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_s3_producer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;
           env:
-            - name: S3_BKT_NAME
+            - name: STORE_EVENTS_BKT
               value: sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831
             - name: S3_PREFIX
               value: sales_events
-      restartPolicy: Never
+      restartPolicy: OnFailure
   backoffLimit: 4

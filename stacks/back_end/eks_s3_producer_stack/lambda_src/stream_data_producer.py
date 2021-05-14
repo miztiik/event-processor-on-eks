@@ -1,6 +1,7 @@
 import json
 import logging
 import datetime
+import time
 import os
 import random
 import uuid
@@ -121,7 +122,9 @@ def lambda_handler(event, context):
             t_msgs += 1
             t_sales += _s
             # if context.get_remaining_time_in_millis() < 1000:
-            if datetime.datetime.now() >= end_time:
+            # if datetime.datetime.now() >= end_time:
+            if t_msgs >= 10000:
+                time.sleep(10)
                 break
 
         resp["tot_msgs"] = t_msgs
