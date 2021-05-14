@@ -11,8 +11,7 @@ class GlobalArgs:
     OWNER = "Mystique"
     VERSION = "2021-05-14"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-    # S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
-    S3_BKT_NAME = "sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831"
+    S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
     S3_PREFIX = "sales_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
 
