@@ -5,7 +5,7 @@ from aws_cdk import core as cdk
 from stacks.back_end.vpc_stack import VpcStack
 from stacks.back_end.s3_stack.s3_stack import S3Stack
 from stacks.back_end.eks_cluster_stack.eks_cluster_stack import EksClusterStack
-from stacks.back_end.eks_s3_producer_stack.eks_s3_producer_stack import EksS3ProducerStack
+from stacks.back_end.eks_sqs_consumer_stack.eks_sqs_consumer_stack import EksSqsConsumerStack
 
 app = cdk.App()
 
@@ -39,13 +39,23 @@ eks_cluster_stack = EksClusterStack(
 
 
 # S3 Sales Event Data Producer on EKS Pods
-sales_events_producer_stack = EksS3ProducerStack(
+# sales_events_producer_stack = EksS3ProducerStack(
+#     app,
+#     f"sales-events-producer-stack",
+#     stack_log_level="INFO",
+#     eks_cluster=eks_cluster_stack.eks_cluster_1,
+#     sales_event_bkt=sales_events_bkt_stack.data_bkt,
+#     description="Miztiik Automation: S3 Sales Event Data Producer on EKS Pods")
+
+# Consumer to process sales events from SQS
+sales_events_consumer_stack = EksSqsConsumerStack(
     app,
-    f"sales-events-producer-stack",
+    f"sales-events-consumer-stack",
     stack_log_level="INFO",
     eks_cluster=eks_cluster_stack.eks_cluster_1,
     sales_event_bkt=sales_events_bkt_stack.data_bkt,
-    description="Miztiik Automation: S3 Sales Event Data Producer on EKS Pods")
+    description="Miztiik Automation: Consumer to process sales events from SQS")
+
 
 # Stack Level Tagging
 _tags_lst = app.node.try_get_context("tags")
