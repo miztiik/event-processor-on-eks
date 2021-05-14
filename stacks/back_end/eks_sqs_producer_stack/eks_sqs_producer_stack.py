@@ -1,10 +1,11 @@
 from aws_cdk import aws_eks as _eks
+from aws_cdk import aws_sqs as _sqs
 from aws_cdk import core as cdk
 
 from stacks.miztiik_global_args import GlobalArgs
 
 
-class EksSqsConsumerStack(cdk.Stack):
+class EksSqsProducerStack(cdk.Stack):
     def __init__(
         self,
         scope: cdk.Construct,
@@ -18,13 +19,22 @@ class EksSqsConsumerStack(cdk.Stack):
 
         # Add your stack resources below):
 
+        self.reliable_q = _sqs.Queue(
+            self,
+            "reliableQueue01",
+            delivery_delay=cdk.Duration.seconds(2),
+            queue_name=f"reliable_message_q",
+            retention_period=cdk.Duration.days(2),
+            visibility_timeout=cdk.Duration.seconds(30)
+        )
+
         ########################################
         #######                          #######
-        #######   Stream Data consumer   #######
+        #######   Stream Data Producer   #######
         #######                          #######
         ########################################
 
-        app_grp_name = "sales-event-consumer"
+        app_grp_name = "sales-events-producer"
         app_grp_label = {"app": f"{app_grp_name}"}
 
         app_grp_ns = eks_cluster.add_manifest(
@@ -41,7 +51,7 @@ class EksSqsConsumerStack(cdk.Stack):
             }
         )
 
-        app_01_consumer_deployment = {
+        app_01_producer_deployment = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
@@ -65,7 +75,7 @@ class EksSqsConsumerStack(cdk.Stack):
             }
         }
 
-        app_01_consumer_svc = {
+        app_01_producer_svc = {
             "apiVersion": "v1",
             "kind": "Service",
             "metadata": {
@@ -82,11 +92,11 @@ class EksSqsConsumerStack(cdk.Stack):
         # apply a kubernetes manifest to the cluster
         app_01_manifest = _eks.KubernetesManifest(
             self,
-            "miztSalesEventconsumerSvc",
+            "miztSalesEventproducerSvc",
             cluster=eks_cluster,
             manifest=[
-                app_01_consumer_deployment,
-                app_01_consumer_svc
+                app_01_producer_deployment,
+                app_01_producer_svc
             ]
         )
 
@@ -95,7 +105,7 @@ class EksSqsConsumerStack(cdk.Stack):
 
         ####### APP 02 #######
 
-        app_02_consumer_deployment = {
+        app_02_producer_deployment = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
@@ -117,12 +127,11 @@ class EksSqsConsumerStack(cdk.Stack):
                                     "-c"
                                 ],
                                 "args": [
-                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_sqs_consumer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;"
+                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_sqs_producer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;"
                                 ],
                                 "env": [
                                     {
                                         "name": "STORE_EVENTS_BKT",
-                                        # "value": "sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831"
                                         "value": f"{sales_event_bkt.bucket_name}"
                                     },
                                     {
@@ -140,10 +149,10 @@ class EksSqsConsumerStack(cdk.Stack):
         # apply a kubernetes manifest to the cluster
         app_02_manifest = _eks.KubernetesManifest(
             self,
-            "miztSalesEventconsumer02Svc",
+            "miztSalesEventproducer02Svc",
             cluster=eks_cluster,
             manifest=[
-                app_02_consumer_deployment,
+                app_02_producer_deployment,
             ]
         )
 
