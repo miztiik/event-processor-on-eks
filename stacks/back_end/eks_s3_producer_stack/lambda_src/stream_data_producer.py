@@ -9,11 +9,11 @@ import boto3
 
 class GlobalArgs:
     OWNER = "Mystique"
-    VERSION = "2021-05-11"
+    VERSION = "2021-05-14"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
     # S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
-    S3_BKT_NAME = "sales-events-bkt-stack-databucketd8691f4e-di00ogv8w2uz"
-    S3_PREFIX = "store_events"
+    S3_BKT_NAME = "sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831"
+    S3_PREFIX = "sales_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
 
 
@@ -43,7 +43,7 @@ def put_object(_pre, data):
     try:
         _r = _s3.put_object(
             Bucket=GlobalArgs.S3_BKT_NAME,
-            Key=f"{GlobalArgs.S3_PREFIX}/{_pre}/dt={datetime.datetime.now().strftime('%Y_%m_%d')}/{datetime.datetime.now().strftime('%s%f')}.json",
+            Key=f"{GlobalArgs.S3_PREFIX}/event_type={_pre}/dt={datetime.datetime.now().strftime('%Y_%m_%d')}/{datetime.datetime.now().strftime('%s%f')}.json",
             Body=json.dumps(data).encode("UTF-8"),
         )
         logger.debug(f"resp: {json.dumps(_r)}")
@@ -78,7 +78,6 @@ def lambda_handler(event, context):
             p_s = bool(random.getrandbits(1))
             evnt_body = {
                 "request_id": _u,
-                "event_type": _evnt_type,
                 "store_id": random.randint(1, 10),
                 "cust_id": random.randint(100, 999),
                 "category": random.choice(_categories),
