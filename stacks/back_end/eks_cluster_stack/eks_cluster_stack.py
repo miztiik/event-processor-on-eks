@@ -57,6 +57,9 @@ class EksClusterStack(cdk.Stack):
                 ),
                 _iam.ManagedPolicy.from_aws_managed_policy_name(
                     "AmazonS3FullAccess"
+                ),
+                _iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonSQSFullAccess"
                 )
                 # Yes, yes...I know. :)
             ]

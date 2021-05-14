@@ -12,8 +12,6 @@ class GlobalArgs:
     OWNER = "Mystique"
     VERSION = "2021-05-14"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-    RELIABLE_QUEUE_NAME = os.getenv("RELIABLE_QUEUE_NAME")
-    AWS_REGION = os.getenv("AWS_REGION")
     S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
     S3_PREFIX = "sales_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
@@ -39,34 +37,6 @@ def _rand_coin_flip():
 
 def _gen_uuid():
     return str(uuid.uuid4())
-
-
-def get_q_url(sqs_client):
-    q = sqs_client.get_queue_url(
-        QueueName=GlobalArgs.RELIABLE_QUEUE_NAME).get("QueueUrl")
-    logger.debug(f'{{"q_url":"{q}"}}')
-    return q
-
-
-def send_msg(sqs_client, q_url, msg_body, msg_attr=None):
-    if not msg_attr:
-        msg_attr = {}
-    try:
-        logger.debug(
-            f'{{"msg_body":{msg_body}, "msg_attr": {json.dumps(msg_attr)}}}')
-        resp = sqs_client.send_message(
-            QueueUrl=q_url,
-            MessageBody=msg_body,
-            MessageAttributes=msg_attr
-        )
-    except Exception as e:
-        logger.exception(f"ERROR:{str(e)}")
-        raise e
-    else:
-        return resp
-
-
-sqs_client = boto3.client("sqs", region_name=GlobalArgs.AWS_REGION)
 
 
 def put_object(_pre, data):
@@ -95,7 +65,6 @@ def lambda_handler(event, context):
     _variants = ["black", "red"]
 
     try:
-        q_url = get_q_url(sqs_client)
         t_msgs = 0
         p_cnt = 0
         s_evnts = 0
@@ -146,11 +115,9 @@ def lambda_handler(event, context):
             elif _evnt_type == "inventory_event":
                 inventory_evnts += 1
 
-            send_msg(
-                sqs_client,
-                q_url,
-                json.dumps(evnt_body),
-                _attr
+            put_object(
+                _evnt_type,
+                evnt_body
             )
             t_msgs += 1
             t_sales += _s

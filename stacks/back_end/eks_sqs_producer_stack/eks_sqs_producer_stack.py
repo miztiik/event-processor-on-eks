@@ -28,6 +28,10 @@ class EksSqsProducerStack(cdk.Stack):
             visibility_timeout=cdk.Duration.seconds(30)
         )
 
+        # Grant our EKS Node Producer privileges to write to SQS
+        # Due to cyclic dependency should be done before the EKS cluster is created
+        # self.reliable_q.grant_send_messages(_eks_node_role)
+
         ########################################
         #######                          #######
         #######   Stream Data Producer   #######
@@ -137,6 +141,14 @@ class EksSqsProducerStack(cdk.Stack):
                                     {
                                         "name": "S3_PREFIX",
                                         "value": "sales_events"
+                                    },
+                                    {
+                                        "name": "RELIABLE_QUEUE_NAME",
+                                        "value": f"{self.reliable_q.queue_name}"
+                                    },
+                                    {
+                                        "name": "AWS_REGION",
+                                        "value": f"{cdk.Aws.REGION}"
                                     }
                                 ]
                             }
