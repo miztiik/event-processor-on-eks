@@ -124,8 +124,8 @@ def lambda_handler(event, context):
             # if context.get_remaining_time_in_millis() < 1000:
             # if datetime.datetime.now() >= end_time:
             if t_msgs >= 10000:
-                time.sleep(10)
                 break
+            time.sleep(10)
 
         resp["tot_msgs"] = t_msgs
         resp["bad_msgs"] = p_cnt
