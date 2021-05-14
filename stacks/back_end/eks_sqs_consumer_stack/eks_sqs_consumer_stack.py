@@ -117,7 +117,7 @@ class EksSqsConsumerStack(cdk.Stack):
                                     "-c"
                                 ],
                                 "args": [
-                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_s3_consumer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;"
+                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_sqs_consumer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;"
                                 ],
                                 "env": [
                                     {
