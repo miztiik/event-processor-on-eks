@@ -55,61 +55,9 @@ class EksSqsProducerStack(cdk.Stack):
             }
         )
 
+        ####### APP 01 #######
+
         app_01_producer_deployment = {
-            "apiVersion": "apps/v1",
-            "kind": "Deployment",
-            "metadata": {
-                "name": "hello-world-svc",
-                "namespace": f"{app_grp_name}-ns"
-            },
-            "spec": {
-                "replicas": 2,
-                "selector": {"matchLabels": app_grp_label},
-                "template": {
-                    "metadata": {"labels": app_grp_label},
-                    "spec": {
-                        "containers": [{
-                            "name": "hello-world",
-                            "image": "paulbouwer/hello-kubernetes:1.5",
-                            "ports": [{"containerPort": 8080, "protocol": "TCP"}]
-                        }
-                        ]
-                    }
-                }
-            }
-        }
-
-        app_01_producer_svc = {
-            "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-                "name": "hello-world-svc",
-                "namespace": f"{app_grp_name}-ns"
-            },
-            "spec": {
-                "type": "LoadBalancer",
-                "ports": [{"port": 80, "targetPort": 8080}],
-                "selector": app_grp_label
-            }
-        }
-
-        # apply a kubernetes manifest to the cluster
-        app_01_manifest = _eks.KubernetesManifest(
-            self,
-            "miztSalesEventproducerSvc",
-            cluster=eks_cluster,
-            manifest=[
-                app_01_producer_deployment,
-                app_01_producer_svc
-            ]
-        )
-
-        app_01_manifest.node.add_dependency(
-            app_grp_ns)
-
-        ####### APP 02 #######
-
-        app_02_producer_deployment = {
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
@@ -124,7 +72,7 @@ class EksSqsProducerStack(cdk.Stack):
                     "spec": {
                         "containers": [
                             {
-                                "name": f"{app_grp_name}-02-svc",
+                                "name": f"{app_grp_name}",
                                 "image": "python:3.8.10-alpine",
                                 "command": [
                                     "sh",
@@ -149,6 +97,14 @@ class EksSqsProducerStack(cdk.Stack):
                                     {
                                         "name": "AWS_REGION",
                                         "value": f"{cdk.Aws.REGION}"
+                                    },
+                                    {
+                                        "name": "TOT_MSGS_TO_PRODUCE",
+                                        "value": "10000"
+                                    },
+                                    {
+                                        "name": "WAIT_SECS_BETWEEN_MSGS",
+                                        "value": "2"
                                     }
                                 ]
                             }
@@ -159,16 +115,16 @@ class EksSqsProducerStack(cdk.Stack):
         }
 
         # apply a kubernetes manifest to the cluster
-        app_02_manifest = _eks.KubernetesManifest(
+        app_01_manifest = _eks.KubernetesManifest(
             self,
-            "miztSalesEventproducer02Svc",
+            "miztSalesEventproducerSvc",
             cluster=eks_cluster,
             manifest=[
-                app_02_producer_deployment,
+                app_01_producer_deployment,
             ]
         )
 
-        app_02_manifest.node.add_dependency(
+        app_01_manifest.node.add_dependency(
             app_grp_ns)
 
         ###########################################
@@ -179,4 +135,11 @@ class EksSqsProducerStack(cdk.Stack):
             "AutomationFrom",
             value=f"{GlobalArgs.SOURCE_INFO}",
             description="To know more about this automation stack, check out our github page.",
+        )
+
+        output_1 = cdk.CfnOutput(
+            self,
+            "ReliableMessageQueue",
+            value=f"https://console.aws.amazon.com/sqs/v2/home?region={cdk.Aws.REGION}#/queues",
+            description="Reliable Message Queue"
         )

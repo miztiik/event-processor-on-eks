@@ -54,6 +54,7 @@ sales_events_consumer_stack = EksSqsConsumerStack(
     f"sales-events-consumer-stack",
     stack_log_level="INFO",
     eks_cluster=eks_cluster_stack.eks_cluster_1,
+    reliable_q=sales_events_producer_stack.reliable_q,
     sales_event_bkt=sales_events_bkt_stack.data_bkt,
     description="Miztiik Automation: Consumer to process sales events from SQS")
 

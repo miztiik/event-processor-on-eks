@@ -17,6 +17,8 @@ class GlobalArgs:
     S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
     S3_PREFIX = "sales_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
+    WAIT_SECS_BETWEEN_MSGS = int(os.getenv("WAIT_SECS_BETWEEN_MSGS", 2))
+    TOT_MSGS_TO_PRODUCE = int(os.getenv("TOT_MSGS_TO_PRODUCE", 10000))
 
 
 def set_logging(lv=GlobalArgs.LOG_LEVEL):
@@ -154,11 +156,11 @@ def lambda_handler(event, context):
             )
             t_msgs += 1
             t_sales += _s
+            time.sleep(GlobalArgs.WAIT_SECS_BETWEEN_MSGS)
             # if context.get_remaining_time_in_millis() < 1000:
             # if datetime.datetime.now() >= end_time:
-            if t_msgs >= 10000:
+            if t_msgs >= GlobalArgs.TOT_MSGS_TO_PRODUCE:
                 break
-            time.sleep(10)
 
         resp["tot_msgs"] = t_msgs
         resp["bad_msgs"] = p_cnt

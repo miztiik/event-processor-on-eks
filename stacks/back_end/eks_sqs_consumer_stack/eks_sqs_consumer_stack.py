@@ -11,6 +11,7 @@ class EksSqsConsumerStack(cdk.Stack):
         construct_id: str,
         stack_log_level: str,
         eks_cluster,
+        reliable_q,
         sales_event_bkt,
         **kwargs
     ) -> None:
@@ -24,7 +25,7 @@ class EksSqsConsumerStack(cdk.Stack):
         #######                          #######
         ########################################
 
-        app_grp_name = "sales-event-consumer"
+        app_grp_name = "sales-events-consumer"
         app_grp_label = {"app": f"{app_grp_name}"}
 
         app_grp_ns = eks_cluster.add_manifest(
@@ -45,60 +46,6 @@ class EksSqsConsumerStack(cdk.Stack):
             "apiVersion": "apps/v1",
             "kind": "Deployment",
             "metadata": {
-                "name": "hello-world-svc",
-                "namespace": f"{app_grp_name}-ns"
-            },
-            "spec": {
-                "replicas": 2,
-                "selector": {"matchLabels": app_grp_label},
-                "template": {
-                    "metadata": {"labels": app_grp_label},
-                    "spec": {
-                        "containers": [{
-                            "name": "hello-world",
-                            "image": "paulbouwer/hello-kubernetes:1.5",
-                            "ports": [{"containerPort": 8080, "protocol": "TCP"}]
-                        }
-                        ]
-                    }
-                }
-            }
-        }
-
-        app_01_consumer_svc = {
-            "apiVersion": "v1",
-            "kind": "Service",
-            "metadata": {
-                "name": "hello-world-svc",
-                "namespace": f"{app_grp_name}-ns"
-            },
-            "spec": {
-                "type": "LoadBalancer",
-                "ports": [{"port": 80, "targetPort": 8080}],
-                "selector": app_grp_label
-            }
-        }
-
-        # apply a kubernetes manifest to the cluster
-        app_01_manifest = _eks.KubernetesManifest(
-            self,
-            "miztSalesEventconsumerSvc",
-            cluster=eks_cluster,
-            manifest=[
-                app_01_consumer_deployment,
-                app_01_consumer_svc
-            ]
-        )
-
-        app_01_manifest.node.add_dependency(
-            app_grp_ns)
-
-        ####### APP 02 #######
-
-        app_02_consumer_deployment = {
-            "apiVersion": "apps/v1",
-            "kind": "Deployment",
-            "metadata": {
                 "name": f"{app_grp_name}",
                 "namespace": f"{app_grp_name}-ns"
             },
@@ -110,24 +57,48 @@ class EksSqsConsumerStack(cdk.Stack):
                     "spec": {
                         "containers": [
                             {
-                                "name": f"{app_grp_name}-02-svc",
+                                "name": f"{app_grp_name}",
                                 "image": "python:3.8.10-alpine",
                                 "command": [
                                     "sh",
                                     "-c"
                                 ],
                                 "args": [
-                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_sqs_consumer_stack/lambda_src/stream_data_producer.py;pip3 install --user boto3;python3 stream_data_producer.py;"
+                                    "wget https://raw.githubusercontent.com/miztiik/event-processor-on-eks/master/stacks/back_end/eks_sqs_consumer_stack/lambda_src/stream_data_consumer.py;pip3 install --user boto3;python3 stream_data_consumer.py;"
                                 ],
-                                "env": [
+                                "env":
+                                [
                                     {
                                         "name": "STORE_EVENTS_BKT",
-                                        # "value": "sales-events-bkt-stack-databucketd8691f4e-uaxjd1d2l831"
                                         "value": f"{sales_event_bkt.bucket_name}"
                                     },
                                     {
                                         "name": "S3_PREFIX",
                                         "value": "sales_events"
+                                    },
+                                    {
+                                        "name": "RELIABLE_QUEUE_NAME",
+                                        "value": f"{reliable_q.queue_name}"
+                                    },
+                                    {
+                                        "name": "AWS_REGION",
+                                        "value": f"{cdk.Aws.REGION}"
+                                    },
+                                    {
+                                        "name": "MAX_MSGS_PER_BATCH",
+                                        "value": "5"
+                                    },
+                                    {
+                                        "name": "MSG_POLL_BACKOFF",
+                                        "value": "2"
+                                    },
+                                    {
+                                        "name": "MSG_PROCESS_DELAY",
+                                        "value": "10"
+                                    },
+                                    {
+                                        "name": "TOT_MSGS_TO_PROCESS",
+                                        "value": "10000"
                                     }
                                 ]
                             }
@@ -138,16 +109,16 @@ class EksSqsConsumerStack(cdk.Stack):
         }
 
         # apply a kubernetes manifest to the cluster
-        app_02_manifest = _eks.KubernetesManifest(
+        app_01_manifest = _eks.KubernetesManifest(
             self,
-            "miztSalesEventconsumer02Svc",
+            "miztSalesEventConsumerSvc",
             cluster=eks_cluster,
             manifest=[
-                app_02_consumer_deployment,
+                app_01_consumer_deployment
             ]
         )
 
-        app_02_manifest.node.add_dependency(
+        app_01_manifest.node.add_dependency(
             app_grp_ns)
 
         ###########################################

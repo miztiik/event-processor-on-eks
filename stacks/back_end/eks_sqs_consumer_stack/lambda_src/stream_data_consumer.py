@@ -19,7 +19,7 @@ class GlobalArgs:
     MSG_PROCESS_DELAY = int(os.getenv("MSG_PROCESS_DELAY", 10))
     TOT_MSGS_TO_PROCESS = int(os.getenv("TOT_MSGS_TO_PROCESS", 10))
     S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
-    S3_PREFIX = "sales_events"
+    S3_PREFIX = "store_events"
 
 
 def set_logging(lv=GlobalArgs.LOG_LEVEL):
