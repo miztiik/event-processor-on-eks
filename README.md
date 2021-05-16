@@ -328,13 +328,13 @@ In this demo, we will create a the architecture like the one shown above. We wil
 
        Navigate to `SalesEventsBucket` in S3 Console, Here you can notice that the events are stored under two prefixes `sale_event` or `inventory_event`. As an example, here under the `inventory_event` prefix you will find the files received by our consumer function
 
-       ![Miztiik Automation: Event Driven Architecture with Kafka](images/miztiik_automation_event_streams_with_managed_kafka_architecture_06.png)
+       ![Miztiik Automation: Event Processor On EKS Architecture](images/miztiik_automation_event_processor_on_eks_architecture_03.png)
 
-       You can use S3 select to view the files.
+       You can use S3 select to view the files or download them and view them locally.
 
 1.  ## 📒 Conclusion
 
-    Here we have demonstrated how to use AWS for launching highly available EKS cluster. You can extend this launching your workloads using `service` and `deployment` manifests.
+    Here we have demonstrated how to use kubernetes for producing and consuming events. You can extend this by scaling your cluster based on events like, SQS Queue depth or consumer CPU etc.
 
 1.  ## 🧹 CleanUp
 

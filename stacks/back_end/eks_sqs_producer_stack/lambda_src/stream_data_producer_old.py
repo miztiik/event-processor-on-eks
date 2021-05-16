@@ -13,7 +13,7 @@ class GlobalArgs:
     VERSION = "2021-05-14"
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
     S3_BKT_NAME = os.getenv("STORE_EVENTS_BKT")
-    S3_PREFIX = "sales_events"
+    S3_PREFIX = "store_events"
     EVNT_WEIGHTS = {"success": 80, "fail": 20}
 
 
