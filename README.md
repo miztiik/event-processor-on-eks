@@ -7,7 +7,7 @@ In this application, they will have their physical stores, send a stream _sales_
 They heard that AWS offers capabilities to build event-driven architectures using kubernetes, Can you help them?
 
 ## 🎯 Solutions
-
+![Miztiik Automation: Event Processor On EKS Architecture](images/miztiik_automation_event_processor_on_eks_architecture_00.png)
 Amazon EKS<sup>[1]</sup> gives you the flexibility to start, run, and scale Kubernetes applications in the AWS. For this demo, we will build a EKS cluster with a managed node groups running `2` _t2.medium_ nodes. We will also have a _producer_ deployment writing messages to a SQS queue. The _producer_ will produce a stream of `sales` or `inventory` events. A sample event is shown below. A _consumer_ running as deployment will process those messages and store them on S3.
 
 ```json
@@ -28,11 +28,7 @@ Amazon EKS<sup>[1]</sup> gives you the flexibility to start, run, and scale Kube
 }
 ```
 
-![Miztiik Automation: Event Driven Architecture with Kafka](images/miztiik_automation_event_streams_with_managed_kafka_architecture_00.png)
-
-## 🎯 Solutions
-
-![Miztiik Automation: Event Processor On EKS Architecture](images/miztiik_automation_event_processor_on_eks_architecture_00.png)
+![Miztiik Automation: Event Processor On EKS Architecture](images/miztiik_automation_event_processor_on_eks_architecture_000.png)
 
 In this demo, we will create a the architecture like the one shown above. We will have a
 
