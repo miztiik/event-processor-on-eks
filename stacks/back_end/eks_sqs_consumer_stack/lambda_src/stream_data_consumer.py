@@ -133,7 +133,7 @@ def process_msgs(msg_batch):
 
     except Exception as e:
         logger.exception(f"ERROR:{str(e)}")
-        m_process_stats["f_msgs"] += 1
+        # m_process_stats["f_msgs"] += 1
     else:
         return m_process_stats
 
