@@ -6,5 +6,5 @@ class GlobalArgs():
     OWNER = "MystiqueAutomation"
     REPO_NAME = "event-processor-on-eks"
     SOURCE_INFO = f"https://github.com/miztiik/{REPO_NAME}"
-    VERSION = "2020-05-11"
+    VERSION = "2021-05-11"
     MIZTIIK_SUPPORT_EMAIL = ["mystique@example.com", ]
